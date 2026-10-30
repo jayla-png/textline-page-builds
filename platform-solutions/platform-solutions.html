@@ -3200,6 +3200,169 @@ EXPORTS.Examples = Examples;
 })();
 </script>
 <script>
+/* ==========================================================================
+   Integrations section, one version sitewide (Jayla, 2026-10-30).
+   The key wall from the See All Integrations page (Alex, 2026-10-27), copied
+   verbatim, replacing the DS Integrations section here. Same key size (80),
+   gap (2), corner radius (8), panel padding and hover trail (1000ms) as the
+   See All hero, and like it the section fills the screen height with the live
+   shader (Dark tone) behind it. Only difference: the "View all integrations"
+   button in the panel.
+   ========================================================================== */
+(function () {
+var h = React.createElement, D = window.TextlineDS;
+var WALL_ORDER = ["aircall", "instagram", "twilio", "zapier", "pipedrive", "shopify", "salesforce", "help-scout",
+  "zendesk", "zendesk-sell", "hubspot", "talkdesk", "freshdesk", "zendesk-support", "vonage", "facebook-messenger", "signalwire"];
+function wallJitter(r, c) { return (((r * 73856093) ^ (c * 19349663)) >>> 0) % 1000 / 1000; }
+function wallLayout(W, H, o) {
+  var g = o.gap, phone = W < 600;
+  var target = W >= 1100 ? o.cell : W >= 700 ? o.cell * .8 : o.cell * .7;
+  var cols = Math.max(4, Math.round((W + g) / (target + g)));
+  var cell = Math.floor((W - (cols - 1) * g) / cols * 100) / 100;
+  /* the copy needs about 520px across, whatever the key size */
+  var pc = phone ? cols : Math.min(cols, Math.max(cols - 2 * o.side, Math.ceil((Math.min(W, 520) + g) / (cell + g))));
+  if ((cols - pc) % 2) pc++;
+  if (pc > cols) pc = cols;
+  var pr = Math.max(2, Math.ceil((o.need + g) / (cell + g)));
+  var rows = o.rows ? Math.max(pr + 2, o.rows) : Math.max(pr + 2, Math.floor((H + g) / (cell + g)));
+  if ((rows - pr) % 2) pr++;
+  if (rows < pr + 2) rows = pr + 2;
+  var c0 = (cols - pc) / 2, r0 = (rows - pr) / 2, free = [], r, c, i;
+  for (r = 0; r < rows; r++) for (c = 0; c < cols; c++)
+    if (!(r >= r0 && r < r0 + pr && c >= c0 && c < c0 + pc)) free.push({ r: r, c: c, logo: null, tint: null });
+  var list = D.IntegrationLogo.list, n = Math.min(WALL_ORDER.length, Math.max(1, Math.round(free.length * o.density / 100)));
+  var picked = [free[Math.min(1, free.length - 1)]];
+  while (picked.length < n) {
+    var best = null, bd = -1;
+    for (i = 0; i < free.length; i++) {
+      if (picked.indexOf(free[i]) >= 0) continue;
+      var md = 1e9;
+      for (var j = 0; j < picked.length; j++) md = Math.min(md, Math.pow(picked[j].r - free[i].r, 2) + Math.pow(picked[j].c - free[i].c, 2));
+      md += wallJitter(free[i].r, free[i].c) * .9;
+      if (md > bd) { bd = md; best = free[i]; }
+    }
+    picked.push(best);
+  }
+  picked.forEach(function (x, k) { x.logo = WALL_ORDER[k]; });
+  free.forEach(function (x) {
+    if (x.logo) return;
+    var b = picked[0], d = 1e9;
+    picked.forEach(function (q) { var dd = Math.pow(q.r - x.r, 2) + Math.pow(q.c - x.c, 2); if (dd < d) { d = dd; b = q; } });
+    var info = list[b.logo] || {}; x.tint = info.tint || info.bg;
+  });
+  return { cols: cols, rows: rows, cell: cell, gap: g, pc: pc, pr: pr, c0: c0, r0: r0, cells: free };
+}
+function HeroWall(p) {
+  var boxRef = React.useRef(null), gridRef = React.useRef(null), copyRef = React.useRef(null);
+  var sz = React.useState(null), size = sz[0], setSize = sz[1];
+  var nd = React.useState(220), need = nd[0], setNeed = nd[1];
+  var measureRef = React.useRef(null);
+  React.useLayoutEffect(function () { if (measureRef.current) measureRef.current(); }, [p.pad]);
+  React.useLayoutEffect(function () {
+    function measure() {
+      var box = boxRef.current; if (!box) return;
+      var cs = getComputedStyle(box), nav = document.querySelector(p.navFrom || '.ix-top [data-fig="Nav"]');
+      var W = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      var H = window.innerHeight - (nav ? nav.offsetHeight : 0) - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      setSize(function (o) { return o && o.W === W && o.H === H ? o : { W: W, H: H }; });
+    }
+    measureRef.current = measure;
+    measure();
+    var ro = window.ResizeObserver ? new ResizeObserver(measure) : null;
+    if (ro) ro.observe(boxRef.current);
+    window.addEventListener("resize", measure);
+    return function () { if (ro) ro.disconnect(); window.removeEventListener("resize", measure); };
+  }, []);
+  var L = React.useMemo(function () {
+    return size ? wallLayout(size.W, size.H, { cell: p.cell, gap: p.gap, side: p.side, density: p.density, need: need, rows: p.rows }) : null;
+  }, [size, p.cell, p.gap, p.side, p.density, need, p.rows]);
+  /* panel rows follow the copy's real height at the panel's width */
+  React.useLayoutEffect(function () {
+    var el = copyRef.current; if (!el) return;
+    var cs = getComputedStyle(el.parentNode);
+    var n = Math.ceil(el.offsetHeight + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + 2);
+    if (Math.abs(n - need) > 1) setNeed(n);
+  });
+  /* hover trail: the key under the pointer lights at once and fades out */
+  React.useEffect(function () {
+    var stage = gridRef.current; if (!stage) return;
+    var els = [].slice.call(stage.querySelectorAll(".ix-wall__cell"));
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var fade = Math.max(1, p.fade), v = els.map(function () { return 0; }), target = -1, raf = 0, last = 0;
+    function paint(i) { els[i].style.setProperty("--tl-il-lit", v[i].toFixed(3)); }
+    function frame(now) {
+      var dt = Math.min(64, now - last); last = now; var busy = false;
+      for (var i = 0; i < els.length; i++) {
+        var tg = i === target ? 1 : 0, o = v[i];
+        if (o < tg) v[i] = tg; else if (o > tg) v[i] = reduce ? tg : Math.max(tg, o - dt / fade);
+        if (v[i] > 0) busy = true;
+        if (v[i] !== o) paint(i);
+      }
+      raf = busy || target >= 0 ? requestAnimationFrame(frame) : 0;
+    }
+    function kick() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+    function enter(e) { target = els.indexOf(e.currentTarget); kick(); }
+    function leave() { target = -1; kick(); }
+    els.forEach(function (el) { el.addEventListener("mouseenter", enter); });
+    stage.addEventListener("mouseleave", leave);
+    return function () {
+      if (raf) cancelAnimationFrame(raf);
+      els.forEach(function (el) { el.removeEventListener("mouseenter", enter); el.style.removeProperty("--tl-il-lit"); });
+      stage.removeEventListener("mouseleave", leave);
+    };
+  }, [L, p.fade]);
+
+  return h("section", { className: "ix-wall", "data-theme": "on-dark", ref: boxRef },
+    L ? h("div", { className: "ix-wall__grid", ref: gridRef, style: {
+          gridTemplateColumns: "repeat(" + L.cols + "," + L.cell + "px)", gridAutoRows: L.cell + "px",
+          gap: L.gap + "px", "--ix-cell": L.cell + "px" } },
+        L.cells.map(function (c) {
+          return h(D.IntegrationLogo, { key: c.r + "-" + c.c, logo: c.logo, state: c.logo ? undefined : "no-logo", tint: c.tint, lit: 0,
+            className: "ix-wall__cell", style: { gridRow: c.r + 1, gridColumn: c.c + 1 } });
+        }),
+        h("div", { className: "tl-integ__panel", style: { gridRow: (L.r0 + 1) + " / span " + L.pr, gridColumn: (L.c0 + 1) + " / span " + L.pc } },
+          h("div", { className: "ix-wall__copy", ref: copyRef },
+            h("h2", { className: "tl-integ__title display-l" }, p.title),
+            p.subtitle ? h("p", { className: "tl-integ__subtitle body-l" }, p.subtitle) : null,
+            p.buttonLabel ? h(D.Button, { type: "primary", label: p.buttonLabel }) : null)))
+      : null);
+}
+
+
+var SHADER_SRC = "https://textline-brand.vercel.app/shader/textline-shader.js";
+function LiveShader(p) {
+  var ref = React.useRef(null);
+  var tone = p && p.tone || "azure";
+  React.useEffect(function () {
+    var s = null, gone = false;
+    var phone = window.matchMedia("(max-width: 809px)").matches;
+    import(SHADER_SRC).then(function (m) {
+      if (gone || !ref.current) return;
+      s = new m.TextlineShader(ref.current, {
+        tone: tone, config: { speed: 0.5 },
+        fps: phone ? 30 : 60, dpr: phone ? 1 : 1.5
+      });
+    }).catch(function () { /* box keeps its flat fill */ });
+    return function () { gone = true; if (s) s.destroy(); };
+  }, [tone]);
+  return h("div", { className: (p && p.className) || "ig-livecta__bg", "aria-hidden": "true", ref: ref });
+}
+window.IntegWall = function (p) {
+  return h("div", { className: "pw-integ" },
+    /* Shader Lab, Dark tone, same as the See All hero */
+    h(LiveShader, { tone: "dark", className: "ix-top__shader" }),
+    h(D.ExposedGrid, { surface: "dark" }),
+    h("div", { className: "pw-integ__wall" },
+      h(HeroWall, { title: p.title, subtitle: p.subtitle, buttonLabel: p.buttonLabel,
+        /* same values as the See All hero */
+        cell: 80, gap: 2, side: 3, density: 25, fade: 1000,
+        /* the See All hero shares the screen with the nav; count the page nav
+           the same way so both walls get the same number of rows */
+        navFrom: '.tl-nav' })));
+};
+})();
+</script>
+<script>
 var ICONS = {
 lineBubble:'<path d="M25.9203 3.20947C23.9696 3.20947 22.3899 4.79114 22.3899 6.73989V15.7264C22.3899 17.6752 23.9696 19.2568 25.9203 19.2568H27.525V22.1454C27.525 22.5155 27.7372 22.8529 28.0708 23.0132C28.4044 23.1735 28.8004 23.1285 29.0894 22.8973L33.6399 19.2568H39.4001C41.3508 19.2568 42.9305 17.6752 42.9305 15.7264V6.73989C42.9305 4.79114 41.3508 3.20947 39.4001 3.20947H25.9203Z" fill-opacity="0.4"/>',
 lineBody:'<path d="M33.3507 34.3565L26.548 31.3364C24.8903 30.5995 22.9421 31.0714 21.8052 32.4849L18.9351 35.2488C15.8965 33.2633 13.3019 30.6664 11.3164 27.6232L14.1147 24.7651C15.5306 23.6305 16.0048 21.6799 15.2702 20.0223L12.2478 13.215C11.4504 11.4201 9.49281 10.4762 7.58869 10.9668L2.99789 12.1626C1.03103 12.6741 -0.240704 14.5805 0.0382939 16.5962C2.20975 32.0544 14.5201 44.3671 29.983 46.5385C30.169 46.5641 30.3504 46.5757 30.5317 46.5757C32.3312 46.5757 33.9447 45.3621 34.412 43.5766L35.5965 39.011C36.0871 37.1115 35.1432 35.1539 33.3507 34.3565Z"/>',
@@ -3502,7 +3665,7 @@ var TEXT_SURVEY = function () {
         { icon: "review", title: "Employee satisfaction", body: "Collect feedback about employee happiness. Ask employees how they feel working at your company to get feedback to improve." }] }))),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "Text survey frequently asked questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Integrate Textline for maximum performance", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Integrate Textline for maximum performance", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -3576,7 +3739,7 @@ var SMS_MMS = function () {
         { icon: "address-book", title: "Human resources", body: ["Streamline recruiting", "Share onboarding details", "Solicit employee feedback"] }] }))),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "SMS and MMS platform frequently asked questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Integrate SMS + MMS with ease", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Integrate SMS + MMS with ease", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -3674,7 +3837,7 @@ PAGES_BUILT["10dlc"] = function () {
         { icon: "flag", title: "Noncompliance penalties", body: "Businesses that aren’t registered with the Campaign Registry must pay noncompliance fees." }] }))),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "10DLC frequently asked questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Useful integrations", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Useful integrations", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -3809,7 +3972,7 @@ PAGES_BUILT["automated-text-messages"] = function () {
         { icon: "handshake", title: "Account management", body: "Account managers can set up automated messages to send to a group of customers every few months to check in and see how they are liking the product or service." }] }))),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "Automated text messaging frequently asked questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Integrate automated texting with your business toolkit", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Integrate automated texting with your business toolkit", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -3934,7 +4097,7 @@ PAGES_BUILT["bulk-sms-software"] = function () {
         { icon: "holiday", title: "Thank you or holiday messages", body: "Thank a group of customers for their business or send a holiday text message to your entire contact list with bulk texting." }] }))),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "Bulk text messaging frequently asked questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Enhance outreach with bulk SMS integrations", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Enhance outreach with bulk SMS integrations", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -4031,7 +4194,7 @@ PAGES_BUILT["dedicated-shortcodes"] = function () {
         { icon: "clock", title: "Reminder messages", body: "Use a shortcode to send event reminders, appointment reminders, or payment reminders to customers. This helps businesses reduce missed appointments, avoid missed revenue, and cut down on late payments." }] }))),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "Dedicated shortcode frequently asked questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Utilize Textline integrations", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Utilize Textline integrations", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -4169,7 +4332,7 @@ PAGES_BUILT["mass-texting-service"] = function () {
           h("a", { href: "https://www.textline.com/security-and-compliance-portal" }, "SMS Compliance Guide"), ".")),
       items: [] }] })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "Mass texting FAQs", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Powerful integrations for mass texting", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Powerful integrations for mass texting", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -4268,7 +4431,7 @@ PAGES_BUILT["scheduled-text"] = function () {
         { label: "Out-of-office messages", description: "Set up an out-of-office message or after-business hours message.", message: "Thanks for reaching out to Fixer. Our office hours are 9 a.m. to 5 p.m. CT Monday through Friday. We will respond to your inquiry as soon as possible on the next business day." }] })),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "Scheduled text message frequently asked questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Integrate scheduled text messaging with existing workflows", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Integrate scheduled text messaging with existing workflows", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -4349,7 +4512,7 @@ PAGES_BUILT["sms-for-lead-generation"] = function () {
         { icon: "medical", title: "Dental", body: "Two-way texting can help qualify more leads for the dental industry. For example, use SMS to answer customer questions about your services and accepted insurance." }] }))),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "SMS lead generation frequently asked questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Work smarter with Textline’s integrations", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Work smarter with Textline’s integrations", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -4463,7 +4626,7 @@ PAGES_BUILT["sms-marketing-software"] = function () {
           "Day 3: Hi Lucas. Present this coupon code for 15% off your order: SWEET15"] }] })),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "SMS marketing frequently asked questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Seamlessly integrate SMS marketing", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Seamlessly integrate SMS marketing", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -4561,7 +4724,7 @@ PAGES_BUILT["sms-notification-service"] = function () {
         { label: "Thank you for your business messages", description: "Send a “thank you for your business” message to customers.", message: "Hi Zyad. This is Flynn from TK Insurance. Thank you for choosing us for your insurance needs." }] })),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "Frequently asked questions about SMS notifications", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Integrate Textline with your tech stack", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Integrate Textline with your tech stack", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -4664,7 +4827,7 @@ PAGES_BUILT["text-alert"] = function () {
         { label: "Request feedback", description: "Send a text alert or survey to request customer feedback.", message: "Hi {{contact.name}}. Thanks for choosing Green Estates for your landscaping needs. How was your most recent service? Is there anything we can do to improve?" }] })),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "Text alert frequently asked questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Textline is easy to integrate", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Textline is easy to integrate", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -4755,7 +4918,7 @@ PAGES_BUILT["text-blasts"] = function () {
         { label: "Thank you for your business messages", description: "Send a thank-you note to a group of contacts.", message: "Hi Marshall. This is Joey from Monty Hotels. Thank you for being a loyal customer 😊" }] })),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "Text blast frequently asked questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Empower your text blasts with integrations", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Empower your text blasts with integrations", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -4838,7 +5001,7 @@ PAGES_BUILT["text-enabled-landline"] = function () {
         { icon: "survey", title: "Customer satisfaction surveys", body: "Send surveys like NPS or CSAT to get a pulse on how customers feel about your company." }] }))),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "Frequently Asked Questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Integrate with your favorite tools", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Integrate with your favorite tools", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -4926,7 +5089,7 @@ PAGES_BUILT["text-keywords"] = function () {
           " is an industry leader in SMS compliance. Our text keyword feature aligns with industry compliance standards and regulations. We also have extensive SMS compliance resources to ensure you’re not breaking the rules.")),
         items: [] }] })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "Text keyword frequently asked questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Textline integrates with the tools you need", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Textline integrates with the tools you need", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -5009,7 +5172,7 @@ PAGES_BUILT["text-reminders"] = function () {
         { icon: "car", title: "Automotive", body: "Your car dealership or auto repair service can benefit from SMS reminders. Use them to ensure prospective buyers come in for their test drives or follow-up meetings. Or, use it to ensure customers remember their auto services." }] }))),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "SMS text reminder frequently asked questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Integrations for text appointment reminders", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Integrations for text appointment reminders", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -5095,7 +5258,7 @@ PAGES_BUILT["toll-free-texting"] = function () {
         { icon: "bell", title: "Use SMS for time-sensitive alerts", body: "The majority of text messages are read within five minutes. Use your toll-free number to reliably reach contacts in an emergency or share time-sensitive information with them." }] }))),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "Toll-free SMS frequently asked questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Integrate Textline with ease", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Integrate Textline with ease", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -5187,7 +5350,7 @@ PAGES_BUILT["two-way-sms"] = function () {
         { icon: "survey", title: "Send SMS Surveys", body: "Use 2-way SMS to easily send SMS surveys to customers." }] }))),
     h("div", { "data-fig": "09 CTA Bar" }, h(D.CTABar, { color: "green", title: "Take it out for a spin", body: "Create a free Textline account. No credit card required.", action: { label: "Sign up", type: "secondary" }, above: "dark", below: "light" })),
     h("div", { "data-fig": "10 FAQ" }, h(D.FAQ, { title: "Frequently Asked Questions", items: faq, defaultOpen: 0, action: null })),
-    h("div", { "data-fig": "11 Integrations" }, h(D.Integrations, { title: "Integrate Top Tools with Two-Way SMS for Efficient Workflows", buttonLabel: "View all integrations" })),
+    h("div", { "data-fig": "11 Integrations" }, h(window.IntegWall, { title: "Integrate Top Tools with Two-Way SMS for Efficient Workflows", buttonLabel: "View all integrations" })),
     h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 };
@@ -5335,6 +5498,29 @@ ReactDOM.createRoot(document.getElementById('app')).render(React.createElement(A
 @media (min-width:1200px){
   .tl-ctagrid__cards{gap:1px}
 }
+
+/* ---- Integrations section: the See All hero (Jayla, 2026-10-30) ----
+   Rules copied from see-all-integrations.html: full screen height, live shader
+   behind, rails in the Figma dark values, same padding and radii. */
+.pw-integ{position:relative;display:flex;flex-direction:column;width:100%;min-height:100vh;min-height:100svh;
+  overflow:hidden;isolation:isolate;background:var(--dark-100);
+  --ix-r-hero:8px;--ix-hero-pt:24px;--ix-hero-pb:40px;--ix-hero-px:40px}
+.pw-integ .ix-top__shader{position:absolute;inset:0;z-index:0;pointer-events:none;background:var(--dark-100)}
+.pw-integ>.tl-exposed-grid{z-index:1}
+.pw-integ__wall{position:relative;z-index:2;flex:1 1 auto;display:flex;align-items:center}
+.pw-integ>.tl-exposed-grid{left:50%;right:auto;transform:translateX(-50%);width:100%;max-width:1400px;
+  --tl-eg-darker:#000;--tl-eg-lighter:var(--white-4)}
+.pw-integ .ix-wall{position:relative;z-index:1;flex:1 1 auto;display:flex;align-items:center;justify-content:center;width:100%;max-width:1400px;
+  margin:0 auto;box-sizing:border-box;
+  padding:var(--ix-hero-pt) calc(var(--layout-rail) + var(--ix-hero-px)) var(--ix-hero-pb)}
+.pw-integ .ix-wall__grid{display:grid;position:relative}
+.pw-integ .ix-wall .tl-intlogo{width:auto;height:auto;padding:0;border-radius:var(--ix-r-hero)}
+.pw-integ .ix-wall .tl-intlogo__img{width:calc(var(--ix-cell) * .44);height:calc(var(--ix-cell) * .44);
+  max-width:none;max-height:none;object-fit:contain}
+.pw-integ .ix-wall .tl-integ__panel{margin:0;border-radius:var(--ix-r-hero);min-width:0;box-sizing:border-box;padding:var(--space-xl) var(--space-2xl)}
+.pw-integ .ix-wall__copy{display:flex;flex-direction:column;align-items:center;gap:var(--space-l)}
+.pw-integ .tl-integ__subtitle{text-align:center}
+@media (max-width:809px){.pw-integ .ix-wall .tl-integ__panel{padding:var(--space-l)}}
 </style>
 
 </body>

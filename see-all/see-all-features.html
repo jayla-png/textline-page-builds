@@ -3253,11 +3253,15 @@ EXPORTS.Examples = Examples;
 .bi-row:not(.bi-row--band) .bi-row__inner{position:relative;z-index:1}
 
 /* mid page CTA, same as the blog index */
-.bi-inlinecta{margin:0 0 var(--space-4xl);
+/* The CTA meets the sections above and below with no gap (Jayla, 2026-10-28).
+   Spacing comes from the neighbouring sections, in their own colour. */
+.bi-inlinecta{margin:0;
   margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);width:100vw}
 .bi-inlinecta .tl-ctabar{max-width:none;width:100%}
 /* a band directly above: the CTA starts right at the band edge, no gray gap (Jayla, 2026-10-27) */
 .bi-row--band + .bi-inlinecta{margin-top:0}
+/* a plain row after the CTA gets its own 64 top padding instead of a gap */
+.bi-inlinecta + .bi-row:not(.bi-row--band){padding-top:var(--space-4xl)}
 
 /* ---- card grid: 3 / 2 / 1 ---------------------------------------------- */
 .sa-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-l)}
@@ -3300,6 +3304,16 @@ EXPORTS.Examples = Examples;
   width:max(1440px,100%);height:1024px;background:var(--primary-100);pointer-events:none;z-index:0}
 .ig-livecta .tl-ctabar{position:relative;z-index:1;background:transparent}
 .ig-livecta .tl-ctabar__bg{display:none}
+
+/* ---- One shader CTA per page (Jayla, 2026-10-28) ----
+   First CTA: the blue live shader band (CTABar ripple + LiveShader).
+   Second CTA: the lime card only (Section / CTA Bar green, Figma 946:215495), no shader.
+   The lime card sits where two sections meet. Its band is split in half:
+   top half = the section above, bottom half = the section below (here the footer). */
+.bi-wrap .bi-inlinecta.ig-livecta{width:100vw}
+.bi-wrap .sa-seam{display:block;position:relative;width:100%}
+.sa-seam .tl-ctabar--green{max-width:none;width:100%;border-image:none;
+  background:linear-gradient(to bottom,var(--sa-top) 50%,var(--sa-bot) 50%)}
 
 /* ---- responsive ---- */
 @media (max-width:1199px){
@@ -3437,7 +3451,7 @@ function Row(p) {
 }
 
 /* ---------- live shader, same as integrations-index.html ---------- */
-var SHADER_SRC = "https://textline-brand.vercel.app/shader/textline-shader.js";
+var SHADER_SRC = "https://cdn.jsdelivr.net/gh/jayla-png/textline-shader@1.0.0/textline-shader.min.js";
 function LiveShader() {
   var ref = React.useRef(null);
   React.useEffect(function () {
@@ -3485,15 +3499,17 @@ function SeeAllFeatures() {
         SECTIONS.map(function (s, i) {
           return h(React.Fragment, { key: s.title },
             h(Row, { section: s, band: i % 2 === 0 }),
-            i === 1 ? h("div", { className: "bi-inlinecta", "data-fig": "03 Mid page CTA" },
+            i === 1 ? h("div", { className: "bi-inlinecta ig-livecta", "data-fig": "03 Mid page CTA, live shader" },
+              h(LiveShader, null),
               h(D.CTABar, { color: "ripple", title: "Ready to start texting?", body: "",
                 action: { label: "Create a Free Account" } })) : null);
         }))),
 
-    h("div", { className: "ig-livecta", "data-fig": "04 CTA bottom" },
-      h(LiveShader, null),
+    /* Second CTA: lime card, no shader. Straddles the last section and the footer. Copy is live. */
+    h("div", { className: "sa-seam", "data-fig": "04 CTA bottom, CTA Bar green 946:215495",
+        style: { "--sa-top": "var(--panel-hover)", "--sa-bot": "var(--light-100)" } },
       h(D.CTABar, {
-        color: "ripple", title: "Start texting today.",
+        color: "green", title: "Start texting today.",
         body: "Create a free account today. No credit card required.",
         action: { label: "Create a Free Account" }
       })),
