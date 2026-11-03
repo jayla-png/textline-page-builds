@@ -11,6 +11,8 @@
   Section 3 graphics come from platform-solutions-graphics-FINAL/platform-solutions-graphics.html.
   Copy: Figma page frame first; FAQ answers from the live page capture (Figma 1156:122174).
   Page switcher bar at the top is review chrome, not part of the site.
+  2026-11-02: added page 00 "CMS template", built to the Fire and Spark industry spec (Oct 2026).
+  The "CMS fields" button shows yellow notes per section: fields, types, hide rules, flags.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3252,6 +3254,7 @@ EXPORTS.Examples = Examples;
 var h = React.createElement, D = window.TextlineDS;
 
 var PAGES = [
+  { slug: "template", name: "CMS template (Fire and Spark spec)", built: true },
   { slug: "schools", name: "Schools", figma: "965:116933", built: true },
   { slug: "b2b", name: "B2B", built: false },
   { slug: "bank", name: "Bank", built: false },
@@ -3321,6 +3324,656 @@ function Todo(p) {
 var PAGES_BUILT = {};
 
 </script>
+<style>
+/* ==========================================================================
+   CMS template page (Fire and Spark industry spec, Oct 2026)
+   Added 2026-11-02. Review chrome: .cmsx-note panels show only when
+   "CMS fields" is switched on in the review bar. Not part of the site.
+   ========================================================================== */
+.cmsx-note{display:none}
+html.cms-on .cmsx-note{display:block;position:relative;z-index:5;max-width:1400px;margin:0 auto;box-sizing:border-box;
+  padding:var(--space-m) var(--space-l);background:#fff8c4;color:var(--dark-100);border-top:2px solid var(--dark-100);
+  font-family:var(--font-body);font-size:13px;line-height:1.5}
+.cmsx-note__top{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--space-xs) var(--space-m);margin:0 0 var(--space-xs)}
+.cmsx-note__num{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--dark-100);color:#fff8c4;padding:3px 8px;border-radius:var(--radius-xs)}
+.cmsx-note__name{font-weight:600;font-size:14px}
+.cmsx-note__hide{font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dark-60)}
+.cmsx-note table{border-collapse:collapse;width:100%;max-width:900px}
+.cmsx-note td{padding:3px 12px 3px 0;vertical-align:top;border-top:1px solid var(--dark-12)}
+.cmsx-note td:first-child{white-space:nowrap;font-weight:500;width:1%}
+.cmsx-note td:nth-child(2){white-space:nowrap;font-family:var(--font-mono);font-size:11px;color:var(--dark-60);width:1%}
+.cmsx-note__flag{margin:var(--space-xs) 0 0;color:#9a3d00}
+.ps-page>.ind-sec{flex-direction:column;align-items:center}
+.ps-page>.cmsx-sum{display:none}
+html.cms-on .ps-page>.cmsx-sum{display:block;max-width:1400px;margin:0 auto;box-sizing:border-box;padding:var(--space-l);background:var(--dark-100);color:var(--white-100);font-family:var(--font-body);font-size:13px;line-height:1.6}
+.cmsx-sum h2{font-family:var(--font-display);font-weight:500;font-size:20px;margin:0 0 var(--space-xs)}
+.cmsx-sum ul{margin:0;padding-left:18px;columns:2;column-gap:var(--space-3xl)}
+.cmsx-sum b{color:var(--secondary-100);font-weight:500}
+@media (max-width:810px){.cmsx-sum ul{columns:1}}
+
+/* placeholder token, reads as "fill this in" */
+.tk{color:var(--primary-100)}
+
+/* Section 1: text trust line option (shown in notes, logo row is the default render) */
+.ind-trustline{margin:var(--space-m) 0 0;font-family:var(--font-mono);font-size:12px;letter-spacing:.04em;color:var(--text-2)}
+
+/* Section 3: use cases sit in the long form panel, icons on */
+.ind-uc .tl-lfgroup__items{margin-top:var(--space-l)}
+
+/* Section 3: icon hover. Same tile and scale as Feature / Card, no panel change.
+   Hover zone is each use case row. */
+.ind-uc .tl-lfitem__icon{transition:background-color .2s ease}
+.ind-uc .tl-lfitem__icon .tl-icon{transform-origin:center;transition:transform .2s ease,color .2s ease}
+.ind-uc .tl-lfitem:hover .tl-lfitem__icon{background:var(--primary-12)}
+.ind-uc .tl-lfitem:hover .tl-lfitem__icon .tl-icon{color:var(--primary-100);transform:scale(1.2)}
+
+/* Section 6: stat card textures. Same knockout build as component-explorations S3
+   (liquid blobs clipped to the numeral, zoom on hover). Textures are inline SVG so
+   they load locally. Green bottom left blob darkened per Jayla 2026-11-03. */
+.ind-stats .tl-statcard{--tl-sc-w:340px;--tl-sc-h:118px;--tl-sc-y:-12px}
+
+/* Live shader band, full browser width. Script: jsdelivr jayla-png/textline-shader@1.0.0 */
+.ind-shader{position:relative;width:100%;overflow:hidden;background:var(--primary-100)}
+.ind-shader>textline-shader{position:absolute;inset:0;display:block;width:100%;height:100%;z-index:0;pointer-events:none}
+.ind-shader .tl-ctabar,.ind-shader .tl-ctaclosing{position:relative;z-index:1;background:transparent}
+.ind-shader .tl-ctabar__bg,.ind-shader .tl-ctaclosing__bg{display:none}
+.ind-shader .tl-ctabar{padding-top:var(--space-4xl);padding-bottom:var(--space-4xl)}
+/* short bands: render a tall shader and show its bottom, so the waves span the full width */
+.ind-shader--bar>textline-shader{top:auto;bottom:0;height:max(1024px,100%)}
+
+/* Section 7: Feature / Card hover (Figma 246:39093). Icon leaves the clipped top,
+   Learn more rises in from the bottom. Same build as see-all-features. */
+.ind-fcard{gap:0}
+.ind-fcard:hover,.ind-fcard:focus-within{background:var(--panel-default)}
+.ind-fcard__top{position:relative;overflow:hidden;overflow:clip;width:100%}
+.ind-fcard__stack{position:relative;display:flex;flex-direction:column;gap:var(--space-s);transition:transform .3s ease}
+.ind-fcard:hover .ind-fcard__stack,.ind-fcard:focus-within .ind-fcard__stack{transform:translateY(-44px)}
+.ind-fcard .tl-featurecard__tile{transition:opacity .2s ease}
+.ind-fcard:hover .tl-featurecard__tile,.ind-fcard:focus-within .tl-featurecard__tile{background:var(--dark-8);color:var(--text-1);opacity:0}
+.ind-fcard:hover .tl-featurecard__icon{transform:none}
+.ind-fcard__link{position:absolute;left:0;top:calc(100% + var(--space-s));display:flex;opacity:0;transition:opacity .2s ease}
+.ind-fcard:hover .ind-fcard__link,.ind-fcard:focus-within .ind-fcard__link{opacity:1;transition-delay:.08s}
+@media (hover:none){
+  .ind-fcard__top{overflow:visible}
+  .ind-fcard .ind-fcard__stack{transform:none!important}
+  .ind-fcard .tl-featurecard__tile{opacity:1!important}
+  .ind-fcard__link{position:static;opacity:1}
+}
+@media (prefers-reduced-motion:reduce){.ind-fcard__stack,.ind-fcard .tl-featurecard__tile,.ind-fcard__link,.ind-uc .tl-lfitem__icon .tl-icon{transition:none}}
+
+
+/* ---- 2026-11-03 round ---- */
+/* Quote card (Figma 2458:127467): Primary stars, no stroke until hover */
+.ind-tpl .tl-quotecard{border-color:transparent;transition:border-color .2s ease}
+.ind-tpl .tl-quotecard:hover{border-color:var(--dark-12)}
+.ind-tpl .tl-stars{color:var(--primary-100);gap:var(--space-2xs)}
+.ind-tpl .tl-stars .tl-icon{width:18px;height:18px}
+
+/* Link arrows: true vertical centre (base component nudges them 2px down) */
+.ind-tpl .tl-link__arrow{padding-top:0}
+
+/* Section 9: case study callout on black, like the highlighted feature */
+.ind-tpl .ind-case{background:var(--dark-100)}
+.ind-tpl .ind-case__co{color:var(--white-60)}
+.ind-tpl .ind-case__result{color:var(--white-100)}
+.ind-tpl .ind-case__logo{background:var(--white-8);border-color:var(--white-20);color:var(--white-40)}
+
+/* Section 6: stronger texture zoom on hover */
+.ind-stats .tl-statcard:hover .tl-statcard__numeral{background-size:calc(var(--tl-sc-w) * 1.7) calc(var(--tl-sc-h) * 1.7);background-position:-140px calc(var(--tl-sc-y) - 46px)}
+
+/* Section 10: badges inside the grey panel, bottom left. Hover = footer badge hover (lime wipe, bottom to top) */
+.ind-comp .tl-footerbadge:hover{background-color:var(--secondary-100);transition:background-color 0s linear 250ms}
+.ind-comp .tl-footerbadge:hover::before{clip-path:inset(0)}
+.ind-comp .tl-footerbadge:hover .tl-footerbadge__bottom{color:var(--dark-100)}
+.ind-comp .tl-footerbadge:hover .tl-footerbadge__top{color:var(--dark-60)}
+.ind-comp .tl-footerbadge:hover .tl-footerbadge__icon{background:var(--white-60);border-color:var(--dark-20)}
+.ind-comp .tl-footerbadge:hover .tl-footericon{filter:invert(1)}
+.ind-comp .ind-badges{margin-top:var(--space-xs)}
+
+/* Badge icon: optically centred. The 32 tile sits 1px high against the two line label. */
+.ind-tpl .tl-footerbadge{align-items:center}
+.ind-tpl .tl-footerbadge__label{gap:var(--space-3xs);line-height:1}
+.ind-tpl .tl-footerbadge__bottom{line-height:1.2}
+
+/* Section 14: arrow travels into place instead of only fading */
+.ind-tpl .ar-card__arrow{transform:translateX(-20px);transition:opacity .3s ease,transform .35s cubic-bezier(.2,.7,.3,1)}
+.ind-tpl .ar-card:hover .ar-card__arrow,.ind-tpl .ar-card:focus-visible .ar-card__arrow{transform:none}
+
+/* Section 12: trust badges on the shader, white outline, top of the section */
+.ind-trust__q{display:block}
+.ind-trust__row{display:flex;flex-wrap:wrap;gap:var(--space-s);margin-top:var(--space-l)}
+.ind-trust .tl-footerbadge{background:transparent;box-shadow:inset 0 0 0 1px var(--white-100)}
+.ind-trust .tl-footerbadge__icon{background:none;border:0;width:24px;height:24px}
+.ind-trust .tl-footerbadge__icon .tl-icon{color:var(--white-100)}
+.ind-trust .tl-footerbadge__top{color:var(--white-80);display:flex;align-items:center;gap:2px}
+.ind-trust .tl-footerbadge__top .tl-icon{color:var(--white-100)}
+
+
+/* Section 4: step count preview toggle (review chrome, same yellow as the CMS notes) */
+.ind-steptoggle{display:inline-flex;align-items:center;gap:4px;margin:0 0 var(--space-2xl);padding:4px 4px 4px 12px;background:#fff8c4;border:1px solid var(--dark-100);border-radius:var(--radius-full);font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dark-100)}
+.ind-steptoggle__label{margin-right:6px}
+.ind-steptoggle button{font:inherit;min-width:32px;height:28px;border:0;border-radius:var(--radius-full);background:transparent;color:var(--dark-100);cursor:pointer}
+.ind-steptoggle button:hover{background:var(--dark-8)}
+.ind-steptoggle button.is-on{background:var(--dark-100);color:#fff8c4}
+.ind-steptoggle button:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+
+/* Section 4: numbered steps. One rich text field, numbers are drawn by CSS. */
+.ind-steps{list-style:none;margin:0;padding:0;counter-reset:step;display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:var(--space-l)}
+.ind-steps li{counter-increment:step;position:relative;padding-top:64px;font-family:var(--font-body);font-size:14px;line-height:1.5;color:var(--text-2)}
+.ind-steps li strong{display:block;margin-bottom:var(--space-xs);font-family:var(--font-display);font-weight:500;font-size:20px;line-height:1.4;color:var(--text-1)}
+.ind-steps li::before{content:counter(step);position:absolute;top:0;left:0;width:44px;height:44px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;
+  background:transparent;color:var(--text-1);border:1px solid var(--border-1);border-radius:var(--radius-s);font-family:var(--font-mono);font-weight:600;font-size:16px;z-index:1;
+  transition:background-color .2s ease,color .2s ease,border-color .2s ease}
+.ind-steps li:hover::before{background:var(--primary-100);color:var(--white-100);border-color:var(--primary-100)}
+.ind-steps li::after{content:"";position:absolute;top:21.5px;left:44px;right:calc(-1 * var(--space-l));height:1px;background:var(--border-1)}
+.ind-steps li:last-child::after{display:none}
+.ind-steps-cta{margin-top:var(--space-3xl)}
+@media (max-width:810px){
+  .ind-steps{grid-template-columns:1fr;gap:var(--space-2xl)}
+  .ind-steps li{padding-top:0;padding-left:64px;min-height:44px}
+  .ind-steps li::after{top:44px;left:21.5px;right:auto;bottom:calc(-1 * var(--space-2xl));width:1px;height:auto}
+}
+
+/* Section 7: optional highlighted feature, full width, above the grid */
+.ind-feat-hl{margin-bottom:var(--space-l)}
+.ind-feat-hl .tl-featurecard{padding:var(--space-2xl);background:var(--dark-100)}
+.ind-feat-hl .tl-featurecard:hover{background:var(--dark-90)}
+.ind-feat-hl .tl-featurecard__title{font-size:26px}
+.ind-feat-hl .tl-featurecard__body{font-size:16px;max-width:60ch}
+.ind-seeall{margin-top:var(--space-l)}
+
+/* Section 9: case study callout + quote grid */
+.ind-case{display:grid;grid-template-columns:120px minmax(0,1fr);gap:var(--space-2xl);align-items:center;padding:var(--space-2xl);border-radius:var(--radius-m);background:var(--panel-default);margin-bottom:var(--space-l)}
+.ind-case__logo{width:120px;height:120px;border-radius:var(--radius-s);background:var(--dark-8);border:1px dashed var(--border-1);display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);text-align:center}
+.ind-case__co{margin:0 0 var(--space-xs);font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-2)}
+.ind-case__result{margin:0 0 var(--space-m);font-family:var(--font-display);font-weight:500;font-size:26px;line-height:1.4;color:var(--text-1);text-wrap:balance}
+.ind-quotes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-l)}
+.ind-proof-link{margin-top:var(--space-l)}
+@media (max-width:810px){.ind-case{grid-template-columns:1fr}.ind-quotes{grid-template-columns:1fr}}
+
+/* Section 10: compliance card, prose plus badge row */
+.ind-comp .tl-lfgroup__intro a{color:var(--text-accent)}
+.ind-badges{display:flex;flex-wrap:wrap;gap:var(--space-s);margin-top:var(--space-l)}
+.ind-badges .tl-footerbadge{background:var(--dark-100)}
+
+/* Section 12: closing CTA, two buttons and a badge row */
+.ind-close-actions{display:flex;flex-wrap:wrap;gap:var(--space-s)}
+.ind-close-badges{display:flex;flex-wrap:wrap;gap:var(--space-s);margin-top:var(--space-m)}
+</style>
+<style>
+/* Ported from platform-solutions.html 2026-11-03 */
+/* ---- Integrations section: the See All hero (Jayla, 2026-10-30) ----
+   Rules copied from see-all-integrations.html: full screen height, live shader
+   behind, rails in the Figma dark values, same padding and radii. */
+.pw-integ{position:relative;display:flex;flex-direction:column;width:100%;min-height:100vh;min-height:100svh;
+  overflow:hidden;isolation:isolate;background:var(--dark-100);
+  --ix-r-hero:8px;--ix-hero-pt:24px;--ix-hero-pb:40px;--ix-hero-px:40px}
+.pw-integ .ix-top__shader{position:absolute;inset:0;z-index:0;pointer-events:none;background:var(--dark-100)}
+.pw-integ>.tl-exposed-grid{z-index:1}
+.pw-integ__wall{position:relative;z-index:2;flex:1 1 auto;display:flex;align-items:center}
+.pw-integ>.tl-exposed-grid{left:50%;right:auto;transform:translateX(-50%);width:100%;max-width:1400px;
+  --tl-eg-darker:#000;--tl-eg-lighter:var(--white-4)}
+.pw-integ .ix-wall{position:relative;z-index:1;flex:1 1 auto;display:flex;align-items:center;justify-content:center;width:100%;max-width:1400px;
+  margin:0 auto;box-sizing:border-box;
+  padding:var(--ix-hero-pt) calc(var(--layout-rail) + var(--ix-hero-px)) var(--ix-hero-pb)}
+.pw-integ .ix-wall__grid{display:grid;position:relative}
+.pw-integ .ix-wall .tl-intlogo{width:auto;height:auto;padding:0;border-radius:var(--ix-r-hero)}
+.pw-integ .ix-wall .tl-intlogo__img{width:calc(var(--ix-cell) * .44);height:calc(var(--ix-cell) * .44);
+  max-width:none;max-height:none;object-fit:contain}
+.pw-integ .ix-wall .tl-integ__panel{margin:0;border-radius:var(--ix-r-hero);min-width:0;box-sizing:border-box;padding:var(--space-xl) var(--space-2xl)}
+.pw-integ .ix-wall__copy{display:flex;flex-direction:column;align-items:center;gap:var(--space-l)}
+.pw-integ .tl-integ__subtitle{text-align:center}
+@media (max-width:809px){.pw-integ .ix-wall .tl-integ__panel{padding:var(--space-l)}}
+</style>
+<script>
+/* ==========================================================================
+   Integrations section, one version sitewide (Jayla, 2026-10-30).
+   The key wall from the See All Integrations page (Alex, 2026-10-27), copied
+   verbatim, replacing the DS Integrations section here. Same key size (80),
+   gap (2), corner radius (8), panel padding and hover trail (1000ms) as the
+   See All hero, and like it the section fills the screen height with the live
+   shader (Dark tone) behind it. Only difference: the "View all integrations"
+   button in the panel.
+   ========================================================================== */
+(function () {
+var h = React.createElement, D = window.TextlineDS;
+var WALL_ORDER = ["aircall", "instagram", "twilio", "zapier", "pipedrive", "shopify", "salesforce", "help-scout",
+  "zendesk", "zendesk-sell", "hubspot", "talkdesk", "freshdesk", "zendesk-support", "vonage", "facebook-messenger", "signalwire"];
+function wallJitter(r, c) { return (((r * 73856093) ^ (c * 19349663)) >>> 0) % 1000 / 1000; }
+function wallLayout(W, H, o) {
+  var g = o.gap, phone = W < 600;
+  var target = W >= 1100 ? o.cell : W >= 700 ? o.cell * .8 : o.cell * .7;
+  var cols = Math.max(4, Math.round((W + g) / (target + g)));
+  var cell = Math.floor((W - (cols - 1) * g) / cols * 100) / 100;
+  /* the copy needs about 520px across, whatever the key size */
+  var pc = phone ? cols : Math.min(cols, Math.max(cols - 2 * o.side, Math.ceil((Math.min(W, 520) + g) / (cell + g))));
+  if ((cols - pc) % 2) pc++;
+  if (pc > cols) pc = cols;
+  var pr = Math.max(2, Math.ceil((o.need + g) / (cell + g)));
+  var rows = o.rows ? Math.max(pr + 2, o.rows) : Math.max(pr + 2, Math.floor((H + g) / (cell + g)));
+  if ((rows - pr) % 2) pr++;
+  if (rows < pr + 2) rows = pr + 2;
+  var c0 = (cols - pc) / 2, r0 = (rows - pr) / 2, free = [], r, c, i;
+  for (r = 0; r < rows; r++) for (c = 0; c < cols; c++)
+    if (!(r >= r0 && r < r0 + pr && c >= c0 && c < c0 + pc)) free.push({ r: r, c: c, logo: null, tint: null });
+  var list = D.IntegrationLogo.list, n = Math.min(WALL_ORDER.length, Math.max(1, Math.round(free.length * o.density / 100)));
+  var picked = [free[Math.min(1, free.length - 1)]];
+  while (picked.length < n) {
+    var best = null, bd = -1;
+    for (i = 0; i < free.length; i++) {
+      if (picked.indexOf(free[i]) >= 0) continue;
+      var md = 1e9;
+      for (var j = 0; j < picked.length; j++) md = Math.min(md, Math.pow(picked[j].r - free[i].r, 2) + Math.pow(picked[j].c - free[i].c, 2));
+      md += wallJitter(free[i].r, free[i].c) * .9;
+      if (md > bd) { bd = md; best = free[i]; }
+    }
+    picked.push(best);
+  }
+  picked.forEach(function (x, k) { x.logo = WALL_ORDER[k]; });
+  free.forEach(function (x) {
+    if (x.logo) return;
+    var b = picked[0], d = 1e9;
+    picked.forEach(function (q) { var dd = Math.pow(q.r - x.r, 2) + Math.pow(q.c - x.c, 2); if (dd < d) { d = dd; b = q; } });
+    var info = list[b.logo] || {}; x.tint = info.tint || info.bg;
+  });
+  return { cols: cols, rows: rows, cell: cell, gap: g, pc: pc, pr: pr, c0: c0, r0: r0, cells: free };
+}
+function HeroWall(p) {
+  var boxRef = React.useRef(null), gridRef = React.useRef(null), copyRef = React.useRef(null);
+  var sz = React.useState(null), size = sz[0], setSize = sz[1];
+  var nd = React.useState(220), need = nd[0], setNeed = nd[1];
+  var measureRef = React.useRef(null);
+  React.useLayoutEffect(function () { if (measureRef.current) measureRef.current(); }, [p.pad]);
+  React.useLayoutEffect(function () {
+    function measure() {
+      var box = boxRef.current; if (!box) return;
+      var cs = getComputedStyle(box), nav = document.querySelector(p.navFrom || '.ix-top [data-fig="Nav"]');
+      var W = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      var H = window.innerHeight - (nav ? nav.offsetHeight : 0) - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      setSize(function (o) { return o && o.W === W && o.H === H ? o : { W: W, H: H }; });
+    }
+    measureRef.current = measure;
+    measure();
+    var ro = window.ResizeObserver ? new ResizeObserver(measure) : null;
+    if (ro) ro.observe(boxRef.current);
+    window.addEventListener("resize", measure);
+    return function () { if (ro) ro.disconnect(); window.removeEventListener("resize", measure); };
+  }, []);
+  var L = React.useMemo(function () {
+    return size ? wallLayout(size.W, size.H, { cell: p.cell, gap: p.gap, side: p.side, density: p.density, need: need, rows: p.rows }) : null;
+  }, [size, p.cell, p.gap, p.side, p.density, need, p.rows]);
+  /* panel rows follow the copy's real height at the panel's width */
+  React.useLayoutEffect(function () {
+    var el = copyRef.current; if (!el) return;
+    var cs = getComputedStyle(el.parentNode);
+    var n = Math.ceil(el.offsetHeight + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + 2);
+    if (Math.abs(n - need) > 1) setNeed(n);
+  });
+  /* hover trail: the key under the pointer lights at once and fades out */
+  React.useEffect(function () {
+    var stage = gridRef.current; if (!stage) return;
+    var els = [].slice.call(stage.querySelectorAll(".ix-wall__cell"));
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var fade = Math.max(1, p.fade), v = els.map(function () { return 0; }), target = -1, raf = 0, last = 0;
+    function paint(i) { els[i].style.setProperty("--tl-il-lit", v[i].toFixed(3)); }
+    function frame(now) {
+      var dt = Math.min(64, now - last); last = now; var busy = false;
+      for (var i = 0; i < els.length; i++) {
+        var tg = i === target ? 1 : 0, o = v[i];
+        if (o < tg) v[i] = tg; else if (o > tg) v[i] = reduce ? tg : Math.max(tg, o - dt / fade);
+        if (v[i] > 0) busy = true;
+        if (v[i] !== o) paint(i);
+      }
+      raf = busy || target >= 0 ? requestAnimationFrame(frame) : 0;
+    }
+    function kick() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+    function enter(e) { target = els.indexOf(e.currentTarget); kick(); }
+    function leave() { target = -1; kick(); }
+    els.forEach(function (el) { el.addEventListener("mouseenter", enter); });
+    stage.addEventListener("mouseleave", leave);
+    return function () {
+      if (raf) cancelAnimationFrame(raf);
+      els.forEach(function (el) { el.removeEventListener("mouseenter", enter); el.style.removeProperty("--tl-il-lit"); });
+      stage.removeEventListener("mouseleave", leave);
+    };
+  }, [L, p.fade]);
+
+  return h("section", { className: "ix-wall", "data-theme": "on-dark", ref: boxRef },
+    L ? h("div", { className: "ix-wall__grid", ref: gridRef, style: {
+          gridTemplateColumns: "repeat(" + L.cols + "," + L.cell + "px)", gridAutoRows: L.cell + "px",
+          gap: L.gap + "px", "--ix-cell": L.cell + "px" } },
+        L.cells.map(function (c) {
+          return h(D.IntegrationLogo, { key: c.r + "-" + c.c, logo: c.logo, state: c.logo ? undefined : "no-logo", tint: c.tint, lit: 0,
+            className: "ix-wall__cell", style: { gridRow: c.r + 1, gridColumn: c.c + 1 } });
+        }),
+        h("div", { className: "tl-integ__panel", style: { gridRow: (L.r0 + 1) + " / span " + L.pr, gridColumn: (L.c0 + 1) + " / span " + L.pc } },
+          h("div", { className: "ix-wall__copy", ref: copyRef },
+            h("h2", { className: "tl-integ__title display-l" }, p.title),
+            p.subtitle ? h("p", { className: "tl-integ__subtitle body-l" }, p.subtitle) : null,
+            p.buttonLabel ? h(D.Button, { type: "primary", label: p.buttonLabel }) : null)))
+      : null);
+}
+
+
+var SHADER_SRC = "https://textline-brand.vercel.app/shader/textline-shader.js";
+function LiveShader(p) {
+  var ref = React.useRef(null);
+  var tone = p && p.tone || "azure";
+  React.useEffect(function () {
+    var s = null, gone = false;
+    var phone = window.matchMedia("(max-width: 809px)").matches;
+    import(SHADER_SRC).then(function (m) {
+      if (gone || !ref.current) return;
+      s = new m.TextlineShader(ref.current, {
+        tone: tone, config: { speed: 0.5 },
+        fps: phone ? 30 : 60, dpr: phone ? 1 : 1.5
+      });
+    }).catch(function () { /* box keeps its flat fill */ });
+    return function () { gone = true; if (s) s.destroy(); };
+  }, [tone]);
+  return h("div", { className: (p && p.className) || "ig-livecta__bg", "aria-hidden": "true", ref: ref });
+}
+window.IntegWall = function (p) {
+  return h("div", { className: "pw-integ" },
+    /* Shader Lab, Dark tone, same as the See All hero */
+    h(LiveShader, { tone: "dark", className: "ix-top__shader" }),
+    h(D.ExposedGrid, { surface: "dark" }),
+    h("div", { className: "pw-integ__wall" },
+      h(HeroWall, { title: p.title, subtitle: p.subtitle, buttonLabel: p.buttonLabel,
+        /* same values as the See All hero */
+        cell: 80, gap: 2, side: 3, density: 25, fade: 1000,
+        /* the See All hero shares the screen with the nav; count the page nav
+           the same way so both walls get the same number of rows */
+        navFrom: '.tl-nav' })));
+};
+})();
+</script>
+<script type="module" src="https://cdn.jsdelivr.net/gh/jayla-png/textline-shader@1.0.0/textline-shader.min.js"></script>
+<script>
+/* ---------- CMS template page ---------- */
+
+var TK = function (s) { return h("span", { className: "tk" }, s); };
+
+/* One yellow note per section. f = [field, type, note]. */
+function CmsNote(p) {
+  return h("div", { className: "cmsx-note" },
+    h("div", { className: "cmsx-note__top" },
+      h("span", { className: "cmsx-note__num" }, "Section " + p.n),
+      h("span", { className: "cmsx-note__name" }, p.name),
+      p.hide ? h("span", { className: "cmsx-note__hide" }, "Hides when: " + p.hide) : null),
+    h("table", null, h("tbody", null, p.f.map(function (r, i) {
+      return h("tr", { key: i }, h("td", null, r[0]), h("td", null, r[1]), h("td", null, r[2] || ""));
+    }))),
+    p.flag ? h("p", { className: "cmsx-note__flag" }, "Flag: " + p.flag) : null);
+}
+function Sec(p) {
+  return h("div", { className: "ind-sec", "data-fig": p.fig },
+    h(CmsNote, { n: p.n, name: p.name, f: p.f, hide: p.hide, flag: p.flag }),
+    p.children);
+}
+
+function Shader(p) {
+  return h("div", { className: "ind-shader" + (p.bar ? " ind-shader--bar" : "") + (p.close ? " ind-shader--close" : "") },
+    h("textline-shader", { tone: p.tone || "azure", "aria-hidden": "true" }),
+    p.children);
+}
+function FeatureCardHover(p) {
+  return h("div", { className: "tl-featurecard tl-featurecard--on-light ind-fcard", "data-theme": "on-light", "data-fig": "Feature / Card 246:39093" },
+    h("div", { className: "ind-fcard__top" },
+      h("div", { className: "ind-fcard__stack" },
+        h("div", { className: "tl-featurecard__tile" }, h(D.Icon, { name: p.icon, size: 20, className: "tl-featurecard__icon" })),
+        h("h3", { className: "tl-featurecard__title heading-s" }, p.title),
+        h("p", { className: "tl-featurecard__body body-m" }, p.body),
+        h("div", { className: "ind-fcard__link" }, h(D.Link, { tone: "light", state: "hover", label: "Learn more", href: p.href || "#" })))));
+}
+var STAT_TEX = (function () {
+  var F = '<filter id="l" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="9" result="b"/>' +
+    '<feTurbulence type="fractalNoise" baseFrequency="0.014 0.03" numOctaves="3" seed="8" result="n"/>' +
+    '<feDisplacementMap in="b" in2="n" scale="55" xChannelSelector="R" yChannelSelector="G"/></filter>';
+  function e(cx, cy, rx, ry, fill, op) { return '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '" fill="' + fill + '"' + (op ? ' opacity="' + op + '"' : '') + '/>'; }
+  function svg(base, blobs) {
+    var x = '<svg xmlns="http://www.w3.org/2000/svg" width="340" height="118" viewBox="0 0 340 118"><defs>' + F + '</defs>' +
+      '<rect width="340" height="118" fill="' + base + '"/><g filter="url(#l)">' + blobs + '</g></svg>';
+    return '"data:image/svg+xml,' + encodeURIComponent(x).replace(/\(/g, "%28").replace(/\)/g, "%29") + '"';
+  }
+  return {
+    blue: svg("#001EFF", e(50,14,120,55,"#5B6BFF") + e(300,104,130,55,"#0A0F8C") + e(180,59,70,66,"#00D2FF",".65") + e(330,10,70,45,"#C8FF00",".35")),
+    green: svg("#5C8000", e(60,100,130,55,"#9DC400") + e(290,14,130,55,"#22400A") + e(175,59,70,66,"#00D2FF",".5") + e(325,108,70,45,"#F55E00",".4")),
+    red: svg("#F55E00", e(50,14,120,55,"#FFB03D") + e(300,104,130,55,"#8A2400") + e(180,59,70,66,"#FF2E6B",".7") + e(330,10,70,45,"#C8FF00",".3"))
+  };
+})();
+/* Section 4 preview: review toggle for 4, 5 or 6 steps. The toggle is review chrome, not site. */
+var STEP_TITLES = ["Create your account", "Add your contacts", "Set up your number", "Send your first message", "Manage replies", "Review your results"];
+function StepsPreview() {
+  var st = React.useState(5), n = st[0], setN = st[1];
+  return h(React.Fragment, null,
+    h("div", { className: "ind-steptoggle", role: "group", "aria-label": "Preview step count" },
+      h("span", { className: "ind-steptoggle__label" }, "Preview steps"),
+      [4, 5].map(function (k) {
+        return h("button", { key: k, type: "button", className: k === n ? "is-on" : "", "aria-pressed": k === n ? "true" : "false", onClick: function () { setN(k); } }, k);
+      })),
+    h("ol", { className: "ind-steps" }, STEP_TITLES.slice(0, n).map(function (t, i) {
+      return h("li", { key: i }, h("strong", null, t), "One to two sentences on what the team does in Textline, using this industry's words.");
+    })));
+}
+function times(n, fn) { var a = []; for (var i = 0; i < n; i++) a.push(fn(i)); return a; }
+
+var T_PROBLEM_ICONS = ["phone", "clock", "inbox", "bad", "time", "person-x"];
+var T_UC_ICONS = ["calendar", "bell", "conversation", "money", "survey"];
+var T_BEN_ICONS = ["grow-01", "fast", "handshake", "winner"];
+var T_FEAT_ICONS = ["automate", "message-2", "analytics", "keyword", "plug", "security"];
+
+PAGES_BUILT["template"] = function () {
+  return h("div", { className: "ps-page ind-tpl" },
+
+    h("div", { className: "cmsx-sum" },
+      h("h2", null, "Industry collection, field summary"),
+      h("ul", null,
+        h("li", null, h("b", null, "Industry item: "), "single fields for headings, hero, CTAs and the compliance body."),
+        h("li", null, h("b", null, "Industry Blocks: "), "one collection for per page items (problem, use case, benefit, stat, example, FAQ). Each has Type, Industry, Order."),
+        h("li", null, h("b", null, "Shared libraries: "), "Logos, Features, Reviews, Badges, Integrations, Resources. Same copy on every page."),
+        h("li", null, h("b", null, "Reference fields used: "), "13 of 20 (Enterprise, Next gen CMS)."),
+        h("li", null, h("b", null, "Section hide rule: "), "a blank section heading hides the whole section."),
+        h("li", null, h("b", null, "Static in the template: "), "nav, footer, closing CTA buttons and badges, the steps CTA."))),
+
+    h("div", { "data-fig": "Nav" }, h(D.Nav, null)),
+
+    /* 1 Hero */
+    h(Sec, { n: 1, name: "Hero", fig: "01 Hero",
+      f: [["H1", "Plain text", "SEO keyword owned by Fire and Spark. Max 10 words."],
+          ["Subhead", "Plain text", "30 words or fewer."],
+          ["Hero image", "Image", "Phone mockup with an industry SMS exchange."],
+          ["Primary CTA text + URL", "Plain text, Link", ""],
+          ["Secondary CTA text + URL", "Plain text, Link", "Hides when text is blank."],
+          ["Trust row", "Option", "Logos, Trust line, or None."],
+          ["Logos", "Multi reference", "Logos library. Shows when Trust row = Logos."],
+          ["Trust line", "Plain text", "Shows when Trust row = Trust line."]] },
+      h(D.TextImage, {
+        layout: "text-left", theme: "on-light", className: "ind-hero", eyebrow: "",
+        title: [h("span", { key: "a", style: { color: "var(--primary-100)" } }, "[Industry]"), " text messaging that [outcome for this industry]"],
+        body: "One subhead of 30 words or fewer. It restates the main keyword and adds one or two concrete benefits for this industry, without repeating the H1.",
+        actions: [h(D.Button, { key: "a1", type: "primary", label: "Send your first [industry] text free" }),
+                  h(D.Button, { key: "a2", type: "outline-dark", label: "Book a demo" })],
+        image: IMG("Hotel"), imageAlt: ""
+      }),
+      h(D.LogoBar, { label: "Trusted by [industry] teams", linkLabel: "" })),
+
+    /* 2 Problems */
+    h(Sec, { n: 2, name: "Problems", fig: "02 Problems", hide: "heading is blank",
+      f: [["Heading", "Plain text", ""],
+          ["Pain points", "Multi reference", "Industry Blocks, type Problem. Icon, title, description. 4 or 6."]] },
+      h(D.SectionLayout, { header: { title: "Why [industry] teams struggle to reach people" } },
+        h(D.FeatureGrid, { columns: 2, items: times(6, function (i) {
+          return { icon: T_PROBLEM_ICONS[i], title: "Pain point title " + (i + 1), body: "One to two sentences on a problem this industry runs into, in its own words. No product mention here." };
+        }) }))),
+
+    /* 3 Use cases */
+    h(Sec, { n: 3, name: "Use cases", fig: "03 Use cases", hide: "heading is blank",
+      f: [["Heading", "Plain text", ""],
+          ["Use cases", "Multi reference", "Industry Blocks, type Use case. Icon, title, rich text. 4 to 6."]],
+      flag: "Spec offers a list or accordion choice. Built as the stacked list only." },
+      h(D.Longform, { groups: [{
+        className: "ind-uc",
+        heading: "How [industry] teams use Textline",
+        intro: "",
+        items: times(5, function (i) {
+          return { level: "H3", icon: true, iconName: T_UC_ICONS[i], heading: "Use case title " + (i + 1),
+            body: "Two to three sentences on one real scenario in this industry. Mix messages the team sends out with conversations it has with people. Keep it specific to this industry." };
+        })
+      }] })),
+
+    /* 4 How it works */
+    h(Sec, { n: 4, name: "How it works", fig: "04 How it works", hide: "heading is blank",
+      f: [["Heading", "Plain text", ""],
+          ["Steps", "Rich text", "Numbered list. Bold the step title. Numbers and squares are automatic."],
+          ["CTA", "Static", "Create a Free Account, same on every page."]] },
+      h(D.SectionLayout, { header: { title: "How to start texting your [audience] with Textline" } },
+        h(StepsPreview, null),
+        h("div", { className: "ind-steps-cta" }, h(D.Button, { type: "primary", label: "Create a Free Account" })))),
+
+    /* 5 Benefits */
+    h(Sec, { n: 5, name: "Benefits", fig: "05 Benefits", hide: "heading is blank",
+      f: [["Heading", "Plain text", ""],
+          ["Benefits", "Multi reference", "Industry Blocks, type Benefit. Title, description, optional icon. 4 or 6."]] },
+      h(D.SectionLayout, { color: "dark", header: { title: "Why text messaging works for [industry]" } },
+        h(D.FeatureGrid, { columns: 2, theme: "on-dark", items: times(4, function (i) {
+          return { icon: T_BEN_ICONS[i], title: "Outcome led benefit " + (i + 1), body: "One to two sentences on the result for this industry. Outcomes, not features." };
+        }) }))),
+
+    /* 6 Stats + mid page CTA */
+    h(Sec, { n: 6, name: "Stats + mid page CTA", fig: "06 Stats", hide: "heading is blank (stats only, the CTA bar stays)",
+      f: [["Heading", "Plain text", ""],
+          ["Stats", "Multi reference", "Industry Blocks, type Stat. Value, label, context, source name, source URL. Exactly 3."],
+          ["CTA headline", "Plain text", "Short, specific to this industry."],
+          ["CTA button + shader background", "Static", "Create a Free Account. Live shader, full browser width."]] },
+      h(D.CardsStats, {
+        className: "ind-stats", eyebrow: "", title: "[Industry] texting by the numbers", body: "",
+        stats: [["00%", "blue"], ["00%", "green"], ["00x", "red"]].map(function (s) {
+          return { numeral: s[0], color: s[1], texture: STAT_TEX[s[1]], title: "Short label", body: "One sentence of context for this industry.", source: "Source name, linked" };
+        })
+      }),
+      h(Shader, { bar: true }, h(D.CTABar, { color: "ripple", title: "Short headline for this industry", body: "", action: { label: "Create a Free Account" } }))),
+
+    /* 7 Features */
+    h(Sec, { n: 7, name: "Features", fig: "07 Features", hide: "heading is blank",
+      f: [["Heading", "Plain text", ""],
+          ["Highlighted feature", "Reference", "Features library. Optional, hides when blank."],
+          ["Features", "Multi reference", "Features library. Shared copy, not written per page. 2, 4 or 6. Learn more shows on hover."],
+          ["See all features button", "Static", "Links to the features overview."]],
+      flag: "Spec asks for an industry specific description per feature. Built as shared copy, per our recommendation." },
+      h(D.SectionLayout, { header: { title: "Textline features built for [industry]" } },
+        h("div", { className: "ind-feat-hl" }, h(D.FeatureCard, { theme: "on-dark", icon: "inbox", showLink: true,
+          title: "Highlighted feature title", body: "One sentence from the shared Features library. Shows only when a highlight is picked for this page." })),
+        h("div", { className: "tl-featuregrid", "data-theme": "on-light" },
+          h("div", { className: "tl-featuregrid__panel tl-featuregrid__panel--c2" }, times(6, function (i) {
+            return h("div", { className: "tl-featuregrid__cell", key: i },
+              h(FeatureCardHover, { icon: T_FEAT_ICONS[i], title: "Feature name " + (i + 1), body: "One sentence from the shared Features library." }));
+          }))),
+        h("div", { className: "ind-seeall" }, h(D.Button, { type: "primary", label: "See all features" })))),
+
+    /* 8 Message examples */
+    h(Sec, { n: 8, name: "Message examples", fig: "08 Examples", hide: "heading is blank",
+      f: [["Heading", "Plain text", ""],
+          ["Examples", "Multi reference", "Industry Blocks, type Example. Use case label, full message text with opt out. 4."]] },
+      h(D.Examples, {
+        eyebrow: "", title: "[Industry] text message examples", body: "", columns: 2,
+        examples: ["Confirmation", "Reminder", "Promotion", "Two way reply"].map(function (l) {
+          return { label: l + " label", message: "Full message text written for this industry, one to two sentences, with the opt out wording at the end. Reply STOP to unsubscribe." };
+        })
+      })),
+
+    /* 9 Social proof */
+    h(Sec, { n: 9, name: "Social proof", fig: "09 Social proof", hide: "heading is blank",
+      f: [["Heading", "Plain text", ""],
+          ["Case study: company, result, logo, URL", "Plain text, Image, Link", "Hides when result is blank. URL optional."],
+          ["Reviews", "Multi reference", "Reviews library. 2 or 3 quotes, static grid."],
+          ["Customer stories link", "Static", "textline.com/customers."]],
+      flag: "Spec allows a carousel past 3 quotes. Capped at 3 so the layout stays a grid." },
+      h(D.SectionLayout, { header: { title: "What [industry] teams say about Textline" } },
+        h("div", { className: "ind-case" },
+          h("div", { className: "ind-case__logo" }, "Logo or photo"),
+          h("div", null,
+            h("p", { className: "ind-case__co" }, "[Company name]"),
+            h("p", { className: "ind-case__result" }, "One to two sentences with a specific, measurable result. A stated result, not a quote."),
+            h(D.Link, { tone: "dark", label: "Read the case study" }))),
+        h("div", { className: "ind-quotes" }, times(3, function (i) {
+          return h(D.QuoteCard, { key: i, rating: 5, quote: "One to two sentence customer quote. At least one from this industry.", name: "Name, role", source: "G2" });
+        })),
+        h("div", { className: "ind-proof-link" }, h(D.Button, { type: "primary", label: "Read customer stories" })))),
+
+    /* 10 Compliance */
+    h(Sec, { n: 10, name: "Compliance", fig: "10 Compliance", hide: "heading is blank",
+      f: [["Heading", "Plain text", ""],
+          ["Body", "Rich text", "Two paragraphs, inline link to the compliance guide."],
+          ["Badges", "Multi reference", "Badges library. Row hides when none are picked."]] },
+      h(D.SectionLayout, { header: null },
+        h(D.LongformGroup, { className: "ind-comp", heading: "SMS compliance for [industry]",
+          intro: "First paragraph: why compliance matters in this industry and what getting it right protects, like trust and deliverability. No legal language up front.\nSecond paragraph: how Textline handles consent, opt outs, and TCPA alignment automatically, naming the framework for this industry where it applies. Links to the compliance guide inline." },
+          h("div", { className: "ind-badges" },
+            h(D.FooterBadge, { icon: "soc", labelTop: "COMPLIANT", labelBottom: "SOC 2" }),
+            h(D.FooterBadge, { icon: "hipaa", labelTop: "COMPLIANT", labelBottom: "HIPAA" }))))),
+
+    /* 11 Integrations */
+    h(Sec, { n: 11, name: "Integrations", fig: "11 Integrations", hide: "heading is blank",
+      f: [["Heading", "Plain text", ""],
+          ["Intro", "Plain text", "One line naming the tool type for this industry."],
+          ["Logo wall", "Static", "Same sitewide wall as the platform solutions pages. Logos are not picked per page."],
+          ["View all integrations", "Static", "textline.com/integrations."]],
+      flag: "Open question for Fire and Spark: pick integrations per page, or keep the full wall so the layout works." },
+      h(window.IntegWall, { title: "Works with the tools your [industry] team already uses", subtitle: "One line naming the tool type this industry uses most.", buttonLabel: "View all integrations" })),
+
+    /* 12 Closing CTA */
+    h(Sec, { n: 12, name: "Closing CTA", fig: "12 Closing CTA",
+      f: [["Heading", "Plain text", ""],
+          ["Supporting sentence", "Plain text", ""],
+          ["Show HIPAA / Show SOC 2 / Show G2", "Switch x3", "Trust badges at the bottom. Each hides on its own. G2 badge carries the rating and user count (50,000+ Users, as in the footer)."],
+          ["Eyebrow, buttons, support line, shader", "Static", "Section / CTA Closing (Figma 140:1350). Create a Free Account, Book a Demo. Same on every page."]],
+      flag: "Spec puts FAQ and Resources after this. Our 2026-10-06 rule keeps the closing CTA directly above the footer. Built in spec order for review." },
+      h(Shader, { close: true },
+        h(D.CTAClosing, {
+        support: [
+          h("span", { key: "q", className: "ind-trust__q" }, "Still have questions? Text us: ",
+            h("a", { href: "sms:+14158494349" }, "+1 415-849-4349"), " or contact us ", h("a", { href: "#" }, "here"), "."),
+          h("span", { key: "b", className: "ind-trust ind-trust__row" },
+            h(D.FooterBadge, { icon: "hipaa", labelTop: "COMPLIANT", labelBottom: "HIPAA" }),
+            h(D.FooterBadge, { icon: "soc", labelTop: "COMPLIANT", labelBottom: "SOC 2" }),
+            h("span", { className: "tl-footerbadge" },
+              h("span", { className: "tl-footerbadge__icon" }, h(D.Icon, { name: "ui-g2", size: 20, title: "G2" })),
+              h("span", { className: "tl-footerbadge__label" },
+                h("span", { className: "tl-footerbadge__top mono-micro", role: "img", "aria-label": "5 out of 5 stars on G2" },
+                  times(5, function (i) { return h(D.Icon, { key: i, name: "ui-star", size: 10 }); })),
+                h("span", { className: "tl-footerbadge__bottom body-m-medium" }, "50,000+ Users"))))],
+        eyebrow: "Get started", title: "Start texting your [audience] today",
+        body: "One supporting sentence that closes on this page's key benefit.",
+        note: "", image: null,
+        action: h("div", { className: "ind-close-actions" },
+          h(D.Button, { type: "white", label: "Create a Free Account" }),
+          h(D.Button, { type: "outline-light", label: "Book a Demo" }))
+      }))),
+
+    /* 13 FAQ */
+    h(Sec, { n: 13, name: "FAQ", fig: "13 FAQ", hide: "heading is blank",
+      f: [["Heading", "Plain text", ""],
+          ["FAQs", "Multi reference", "Industry Blocks, type FAQ. Question, rich text answer. 5 to 8. Answers stay in the page HTML."]] },
+      h(D.FAQ, { title: "Frequently asked questions about [industry] text messaging", action: null,
+        items: times(6, function (i) {
+          return { question: "Question " + (i + 1) + " specific to this industry, in sentence case?", answer: "Two to four sentence answer. Not already covered on the page." };
+        }) })),
+
+    /* 14 Resources */
+    h(Sec, { n: 14, name: "Resources", fig: "14 Resources", hide: "heading is blank",
+      f: [["Heading", "Plain text", ""],
+          ["Resources", "Multi reference", "Resources library, title and URL. 4 or 6."]] },
+      h(AdditionalResources, { title: "More resources for [industry] teams",
+        links: [["note", "Resource title 1"], ["quote", "Resource title 2"], ["check", "Resource title 3"],
+                ["survey", "Resource title 4"], ["send", "Resource title 5"], ["secure", "Resource title 6"]] })),
+
+    h("div", { "data-fig": "Footer" }, h(D.Footer, null))
+  );
+};
+</script>
+
 <style>
 .ind-lf-action{display:flex;width:100%;max-width:1400px;margin:0 auto;padding:0 var(--layout-gutter) var(--space-6xl);background:var(--surface-1)}
 </style>
@@ -3454,7 +4107,7 @@ function Stub(p) {
 }
 
 function App() {
-  function fromHash() { var s = (location.hash || "").slice(1); return PAGES.some(function (x) { return x.slug === s; }) ? s : "schools"; }
+  function fromHash() { var s = (location.hash || "").slice(1); return PAGES.some(function (x) { return x.slug === s; }) ? s : "template"; }
   var st = React.useState(fromHash()), slug = st[0], setSlug = st[1];
   React.useEffect(function () {
     function on() { setSlug(fromHash()); window.scrollTo(0, 0); }
@@ -3469,6 +4122,7 @@ function App() {
       h("label", { htmlFor: "ind-page" }, "Page"),
       h("select", { id: "ind-page", value: slug, onChange: function (e) { location.hash = e.target.value; } },
         PAGES.map(function (x, i) { return h("option", { key: x.slug, value: x.slug }, String(i + 1).padStart(2, "0") + "  " + x.name + (x.built ? "" : "  (not built)")); })),
+      pg.slug === "template" ? h("button", { type: "button", onClick: function () { document.documentElement.classList.toggle("cms-on"); } }, "CMS fields on/off") : null,
       h("span", { className: "ps-bar__status" },
         h("span", { className: "ps-bar__dot" + (pg.built ? " is-built" : "") }),
         pg.figma ? "Built from Figma " + pg.figma : "Not built")),
