@@ -1587,6 +1587,13 @@ div.tl-sh__body a{color:var(--text-accent)}
 .fp-rv.is-in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.fp-rv{opacity:1;transform:none;transition:none}}
 
+/* Feature tabs: one shadow and one clipped edge for the tabs and panel together, like the feature card grids.
+   Tab shadows no longer spill onto the panel below. */
+.fp-tabs__inner{display:flex;flex-direction:column;gap:1px;border-radius:var(--radius-s);overflow:hidden;box-shadow:var(--elevation-panel)}
+.fp-tabs__bar{padding-bottom:0;position:relative;z-index:0}
+.fp-tab:focus-visible{box-shadow:var(--elevation-panel),inset var(--focus-ring)}
+.fp-tabs__panel{position:relative;z-index:1}
+
 </style>
 </head>
 <body>
@@ -3514,7 +3521,7 @@ function kids(b) { return Array.isArray(b) ? h.apply(null, [R.Fragment, null].co
 function FeatureTabs(p) {
   var st = R.useState(0), on = st[0], setOn = st[1];
   var items = p.items;
-  return h("div", { className: "fp-tabs", "data-fig": "1A Feature tabs" },
+  return h("div", { className: "fp-tabs", "data-fig": "1A Feature tabs" }, h("div", { className: "fp-tabs__inner" },
     h("div", { className: "fp-tabs__bar", role: "tablist", style: { "--n": items.length } },
       items.map(function (it, i) {
         return h("button", { key: i, className: "fp-tab" + (i === on ? " is-on" : ""), role: "tab", "aria-selected": i === on, onClick: function () { setOn(i); } },
@@ -3528,7 +3535,7 @@ function FeatureTabs(p) {
       })),
       h("div", { className: "fp-stage" }, p.image ? h("div", { className: "fp-im is-on" }, h("img", { src: p.image, alt: "" })) : items.map(function (it, i) {
         return h("div", { key: i, className: "fp-im" + (i === on ? " is-on" : "") }, it.image ? h("img", { src: it.image, alt: "" }) : h(Ph, { ratio: "1 / 1", label: "Graphic " + (i + 1) }));
-      }))));
+      })))));
 }
 
 /* 2 Steps, vertical */
