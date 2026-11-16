@@ -3485,4 +3485,24 @@ function SeeAllKeyTopics() {
 
 ReactDOM.createRoot(document.getElementById("app")).render(h(SeeAllKeyTopics));
 </script>
+<style id="tl-sitewide-link-style">
+/* Sitewide text link style, decided 2026-11-13 (see 05_DECISION_LOG.md).
+   Underlined, same colour as the copy around it: Text/1 (black on light, white on dark).
+   Hover: Text/Accent, which is Primary/100 blue on light and Secondary/100 lime on dark.
+   Both tokens already flip with data-theme, so one rule covers both backgrounds.
+   Scope: links inside running copy. Buttons, nav, footer, breadcrumbs, cards and arrow links keep their own styles. */
+section p a:not([class]),section li a:not([class]),
+.tl-faqitem__inner a,.tl-ctaclosing__support a,.tl-featurecard__body a,.tl-lfitem a:not([class]),
+.fp-grid--medium .tl-featurecard__body a,.fp-grid--notitle .tl-featurecard__title a,.fp-iconlist a,.fp-step__t a,
+.ig-step a,.ig-note a,.bl-sources__list a,.bl-prose p a:not([class]),.bl-prose li a:not([class]){
+  color:var(--text-1);text-decoration:underline;text-decoration-color:currentColor;text-decoration-thickness:1px;text-underline-offset:3px;transition:color 200ms ease}
+section p a:not([class]):hover,section li a:not([class]):hover,
+.tl-faqitem__inner a:hover,.tl-ctaclosing__support a:hover,.tl-featurecard__body a:hover,.tl-lfitem a:not([class]):hover,
+.fp-grid--medium .tl-featurecard__body a:hover,.fp-grid--notitle .tl-featurecard__title a:hover,.fp-iconlist a:hover,.fp-step__t a:hover,
+.ig-step a:hover,.ig-note a:hover,.bl-sources__list a:hover,.bl-prose p a:not([class]):hover,.bl-prose li a:not([class]):hover{
+  color:var(--text-accent);text-decoration-color:currentColor;text-decoration-thickness:1px}
+/* Blog stat card source link sits on a Dark/100 card inside light copy, so it is set to white by hand. */
+.bl-prose a.bl-stat__src{color:var(--white-100);text-decoration:underline;text-decoration-color:currentColor;text-decoration-thickness:1px;text-underline-offset:3px;transition:color 200ms ease}
+.bl-prose a.bl-stat__src:hover{color:var(--secondary-100)}
+</style>
 </body></html>
