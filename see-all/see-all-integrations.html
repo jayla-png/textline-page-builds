@@ -3614,7 +3614,9 @@ window.IntegWall = IntegrationsWall;
    Logos in color at rest (each mark recolored to its Brand color), a subtle
    dot texture at the card edges, and no pastel tint on hover. The test panel
    (bottom right) switches the options; values below are its starting points. */
-.ix-v3{--ixk-dot-c:var(--dark-100);--ixk-dot-r:1px;--ixk-dot-gap:8px;--ixk-dot-o:.25;--ixk-dot-ho:.5;--ixk-dot-depth:35%}
+/* Round 3 settings, locked by Jayla 2026-11-16: logo dark at rest, dots top and bottom 26%, 0.75px, 8px apart,
+   30% in from the edge, hover full brand color (dots 50% on hover in the dots look) */
+.ix-v3{--ixk-dot-c:var(--dark-100);--ixk-dot-r:.75px;--ixk-dot-gap:8px;--ixk-dot-o:.26;--ixk-dot-ho:.5;--ixk-dot-depth:30%}
 .ix-v3 .ixk__content{color:var(--text-1)}
 .ix-v3.ix-hov-full .ixk__content{color:var(--ixk-ink)}
 /* dots: one dot per gap square, faded toward the middle of the card */
@@ -3663,16 +3665,6 @@ window.IntegWall = IntegrationsWall;
   .ix-v3.ix-hov-full .ixk .ixk__dots{--ixk-dot-c:#fff}
 }
 
-/* ---- review only: test panel, not part of the site ---- */
-.ixp{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;flex-direction:column;gap:6px;width:250px;
-  max-height:calc(100vh - 32px);overflow:auto;box-sizing:border-box;padding:12px;border-radius:12px;
-  background:rgba(21,21,21,.92);color:#f4f4f5;font:500 12px/1.3 var(--font-body)}
-.ixp__row{display:flex;justify-content:space-between}
-.ixp input[type=range]{width:100%;accent-color:#c8ff00;margin:0}
-.ixp select{width:100%;font:inherit;color:#f4f4f5;background:#151515;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:4px 6px}
-.ixp__group{margin-top:6px;font:600 10px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.5)}
-.ixp button{font:inherit;color:#fff;background:#001eff;border:0;border-radius:8px;padding:7px;cursor:pointer;margin-top:4px}
-.ixp textarea{width:100%;box-sizing:border-box;height:110px;font:11px/1.4 var(--font-mono);color:#f4f4f5;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px}
 /* ---- responsive ---- */
 @media (max-width:1199px){.ix-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* phones always show the open state; 4:3 left only 12px between mark and title */
@@ -4248,49 +4240,6 @@ function HeroWall(p) {
       : null);
 }
 
-/* review only: Round 3 test panel. Remove before handoff. */
-var PX = [
-  { g: "Logo", k: "rest", l: "Logo at rest", type: "pick", d: "color", opts: [["color", "Brand color"], ["dark", "Dark"]], cls: "ix-rest-" },
-  { g: "Dots", k: "edges", l: "Where", type: "pick", d: "tb", opts: [["tb", "Top and bottom"], ["all", "All sides"], ["none", "Whole card"]], cls: "ix-edges-" },
-  { g: "Dots", k: "dotO", l: "Strength", min: 0, max: 100, step: 1, u: "%", d: 25, css: "--ixk-dot-o", v: function (x) { return x / 100; } },
-  { g: "Dots", k: "dotR", l: "Dot size", min: 0.5, max: 3, step: 0.25, u: "px", d: 1, css: "--ixk-dot-r", v: function (x) { return x + "px"; } },
-  { g: "Dots", k: "gap", l: "Spacing", min: 4, max: 24, step: 1, u: "px", d: 8, css: "--ixk-dot-gap", v: function (x) { return x + "px"; } },
-  { g: "Dots", k: "depth", l: "How far in from the edge", min: 10, max: 50, step: 1, u: "%", d: 35, css: "--ixk-dot-depth", v: function (x) { return x + "%"; } },
-  { g: "Hover", k: "hov", l: "Hover look", type: "pick", d: "plain", opts: [["plain", "Gray card, logo moves up"], ["dots", "Dots turn brand color"], ["full", "Full brand color (bold)"]], cls: "ix-hov-" },
-  { g: "Hover", k: "dotHO", l: "Dot strength on hover (dots look)", min: 0, max: 100, step: 1, u: "%", d: 50, css: "--ixk-dot-ho", v: function (x) { return x / 100; } }
-];
-function TestPanel() {
-  var init = {}; PX.forEach(function (t) { init[t.k] = t.d; });
-  var st = React.useState(init), v = st[0], setV = st[1];
-  var cp = React.useState(false), shown = cp[0], setShown = cp[1];
-  function set(k, x) { var n = Object.assign({}, v); n[k] = x; setV(n); }
-  React.useEffect(function () {
-    var w = document.querySelector(".ix-wrap"); if (!w) return;
-    PX.forEach(function (t) {
-      if (t.type === "pick") t.opts.forEach(function (o) { w.classList.toggle(t.cls + o[0], v[t.k] === o[0]); });
-      else w.style.setProperty(t.css, t.v(v[t.k]));
-    });
-  }, [v]);
-  var out = PX.map(function (t) {
-    if (t.type === "pick") return t.g + ", " + t.l + ": " + t.opts.filter(function (o) { return o[0] === v[t.k]; })[0][1];
-    return t.g + ", " + t.l + ": " + v[t.k] + t.u;
-  }).join("\n");
-  var kids = [], g = null;
-  PX.forEach(function (t) {
-    if (t.g !== g) { g = t.g; kids.push(h("div", { key: "g" + g, className: "ixp__group" }, g)); }
-    if (t.type === "pick") {
-      kids.push(h("select", { key: t.k, value: v[t.k], onChange: function (e) { set(t.k, e.target.value); } },
-        t.opts.map(function (o) { return h("option", { key: o[0], value: o[0] }, t.l + ": " + o[1]); })));
-    } else {
-      kids.push(h("div", { key: t.k + "l", className: "ixp__row" }, h("span", null, t.l), h("span", null, v[t.k] + t.u)));
-      kids.push(h("input", { key: t.k, type: "range", min: t.min, max: t.max, step: t.step, value: v[t.k], onChange: function (e) { set(t.k, +e.target.value); } }));
-    }
-  });
-  return h("div", { className: "ixp" }, kids,
-    h("button", { onClick: function () { setShown(true); try { navigator.clipboard.writeText(out); } catch (e) {} } }, "Copy settings"),
-    shown ? h("textarea", { readOnly: true, value: out, onFocus: function (e) { e.target.select(); } }) : null);
-}
-
 /* ---------- page ---------- */
 /* The picked category lives in the hash (#crm, #help-desk) so a filtered view can be linked. */
 function fromHash() {
@@ -4311,7 +4260,7 @@ function IntegrationsIndex() {
   }
   var list = active ? CARDS.filter(function (x) { return x.cats.indexOf(active) >= 0; }) : CARDS;
 
-  return h("div", { className: "ps-page ix-wrap ix-v3 ix-rest-color ix-hov-plain ix-edges-tb" },
+  return h("div", { className: "ps-page ix-wrap ix-v3 ix-rest-dark ix-hov-full ix-edges-tb" },
 
     h("div", { className: "ix-top" },
       /* Shader Lab, Dark tone (Azure image, luminosity 50% over Dark/100) */
@@ -4347,10 +4296,7 @@ function IntegrationsIndex() {
         action: { label: "Sign up now" }
       })),
 
-    h("div", { "data-fig": "Footer" }, h(D.Footer, null)),
-
-    /* review only, portalled to body: .ps-page>div rules would restyle it */
-    ReactDOM.createPortal(h(TestPanel, null), document.body)
+    h("div", { "data-fig": "Footer" }, h(D.Footer, null))
   );
 }
 
